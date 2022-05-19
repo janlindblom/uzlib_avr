@@ -14,7 +14,7 @@ objects = tinflate.o tinfgzip.o tinfzlib.o adler32.o crc32.o \
     defl_static.o genlz77.o
 
 COPT    = -Os
-CFLAGS  = -Wall $(COPT)
+CFLAGS  = -Wall $(COPT) -fomit-frame-pointer
 LDFLAGS = $(CFLAGS) -s
 
 .PHONY: all clean
@@ -23,14 +23,9 @@ all: $(target)
 
 $(target): $(objects)
 	$(RM) $@
-	ar -frs $@ $^
-	ranlib $@
 
-%.o : %.c
+%.o : %.c %.S
 	$(CC) $(CFLAGS) -o $@ -c $<
-
-%.o : %.nas
-	nasm -o $@ -f elf -D_ELF_ -O3 -Inasm/ $<
 
 clean:
 	$(RM) $(objects) $(target)

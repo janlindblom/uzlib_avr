@@ -53,9 +53,9 @@ lcmextern tinf_adler32,8
 
 lcmlabel tinf_zlib_uncompress,16
     ; tinf_zlib_uncompress(void *dest,
-    ;                      unsigned int *destLen,
+    ;                      uint16_t *destLen,
     ;                      const void *source,
-    ;                      unsigned int sourceLen)
+    ;                      unint16_t sourceLen)
 
     .slen$ equ 2*4 + 4 + 12
     .src$  equ 2*4 + 4 + 8

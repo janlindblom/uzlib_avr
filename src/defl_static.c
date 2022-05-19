@@ -61,7 +61,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * having to transmit the trees.
  */
 
-void outbits(struct uzlib_comp *out, unsigned long bits, int nbits)
+void outbits(struct uzlib_comp *out, uint32_t bits, int16_t nbits)
 {
     assert(out->noutbits + nbits <= 32);
     out->outbits |= bits << out->noutbits;
@@ -69,15 +69,15 @@ void outbits(struct uzlib_comp *out, unsigned long bits, int nbits)
     while (out->noutbits >= 8) {
         if (out->outlen >= out->outsize) {
             out->outsize = out->outlen + 64;
-            out->outbuf = sresize(out->outbuf, out->outsize, unsigned char);
+            out->outbuf = sresize(out->outbuf, out->outsize, char);
         }
-        out->outbuf[out->outlen++] = (unsigned char) (out->outbits & 0xFF);
+        out->outbuf[out->outlen++] = (char) (out->outbits & 0xFF);
         out->outbits >>= 8;
         out->noutbits -= 8;
     }
 }
 
-static const unsigned char mirrorbytes[256] = {
+static const char mirrorbytes[256] = {
     0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0,
     0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
     0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8,
@@ -190,7 +190,7 @@ static const dist_coderecord distcodes[] = {
     {29, 13, 24577, 32768},
 };
 
-void zlib_literal(struct uzlib_comp *out, unsigned char c)
+void zlib_literal(struct uzlib_comp *out, char c)
 {
     if (out->comp_disabled) {
         /*
@@ -209,17 +209,17 @@ void zlib_literal(struct uzlib_comp *out, unsigned char c)
     }
 }
 
-void zlib_match(struct uzlib_comp *out, int distance, int len)
+void zlib_match(struct uzlib_comp *out, int16_t distance, int16_t len)
 {
     const dist_coderecord *d;
     const len_coderecord *l;
-    int i, j, k;
-    int lcode;
+    int16_t i, j, k;
+    int16_t lcode;
 
     assert(!out->comp_disabled);
 
     while (len > 0) {
-        int thislen;
+        int16_t thislen;
 
         /*
          * We can transmit matches of lengths 3 through 258

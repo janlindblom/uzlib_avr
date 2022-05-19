@@ -35,9 +35,9 @@
 
 #include "tinf.h"
 
-int uzlib_zlib_parse_header(TINF_DATA *d)
+int16_t uzlib_zlib_parse_header(TINF_DATA *d)
 {
-   unsigned char cmf, flg;
+   char cmf, flg;
 
    /* -- get header bytes -- */
 

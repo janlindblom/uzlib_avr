@@ -21,11 +21,8 @@ $(target): $(objects)
 	ar -frsv $@ $^
 	ranlib $@
 
-%.o : %.c
-	gcc $(cflags) -o $@ -c $<
-
-%.o : %.nas
-	nasm -o $@ -f win32 -O3 -Inasm/ $<
+%.o : %.c %.S
+	avr-gcc $(cflags) -o $@ -c $<
 
 clean:
 	$(RM) $(target) $(objects)

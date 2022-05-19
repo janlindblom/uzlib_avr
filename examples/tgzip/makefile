@@ -24,7 +24,7 @@ all: $(target)
 $(target): $(objects) $(libs)
 	$(CC) $(LDFLAGS) -o $@ $^ $(libs)
 
-%.o : %.c
+%.o : %.c %.S
 	$(CC) $(CFLAGS) -c $<
 
 clean:

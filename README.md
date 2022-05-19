@@ -1,6 +1,11 @@
 uzlib - Deflate/Zlib-compatible LZ77 compression/decompression library
 ======================================================================
 
+This version of uzlib is an optimisation of uzlib for AVR targets.
+
+Original README
+---------------------
+
 uzlib is a library which can decompress any valid Deflate, Zlib, and Gzip
 (further called just "Deflate") bitstream, and compress data to Deflate-
 compatible bitstream, albeit with lower compression ratio than Zlib Deflate

@@ -56,9 +56,9 @@
 /*#define HASH(p) (p[0] + p[1] + p[2])*/
 
 /* This is hash function from liblzf */
-static inline int HASH(struct uzlib_comp *data, const uint8_t *p) {
-    int v = (p[0] << 16) | (p[1] << 8) | p[2];
-    int hash = ((v >> (3*8 - HASH_BITS)) - v) & (HASH_SIZE - 1);
+static inline int16_t HASH(struct uzlib_comp *data, const uint8_t *p) {
+    int16_t v = (p[0] << 16) | (p[1] << 8) | p[2];
+    int16_t hash = ((v >> (3*8 - HASH_BITS)) - v) & (HASH_SIZE - 1);
     return hash;
 }
 
@@ -66,7 +66,7 @@ static inline int HASH(struct uzlib_comp *data, const uint8_t *p) {
 
 /* Counter for approximate compressed length in LZTXT mode. */
 /* Literal is counted as 1, copy as 2 bytes. */
-unsigned approx_compressed_len;
+uint16_t approx_compressed_len;
 
 void literal(void *data, uint8_t val)
 {
@@ -74,7 +74,7 @@ void literal(void *data, uint8_t val)
     approx_compressed_len++;
 }
 
-void copy(void *data, unsigned offset, unsigned len)
+void copy(void *data, uint16_t offset, uint16_t len)
 {
     printf("C-%u,%u\n", offset, len);
     approx_compressed_len += 2;
@@ -87,7 +87,7 @@ static inline void literal(void *data, uint8_t val)
     zlib_literal(data, val);
 }
 
-static inline void copy(void *data, unsigned offset, unsigned len)
+static inline void copy(void *data, uint16_t offset, uint16_t len)
 {
     zlib_match(data, offset, len);
 }
@@ -95,18 +95,18 @@ static inline void copy(void *data, unsigned offset, unsigned len)
 #endif
 
 
-void uzlib_compress(struct uzlib_comp *data, const uint8_t *src, unsigned slen)
+void uzlib_compress(struct uzlib_comp *data, const uint8_t *src, uint16_t slen)
 {
     const uint8_t *top = src + slen - MIN_MATCH;
     while (src < top) {
-        int h = HASH(data, src);
+        int16_t h = HASH(data, src);
         const uint8_t **bucket = &data->hash_table[h & (HASH_SIZE - 1)];
         const uint8_t *subs = *bucket;
         *bucket = src;
         if (subs && src > subs && (src - subs) <= MAX_OFFSET && !memcmp(src, subs, MIN_MATCH)) {
             src += MIN_MATCH;
             const uint8_t *m = subs + MIN_MATCH;
-            int len = MIN_MATCH;
+            int16_t len = MIN_MATCH;
             while (*src == *m && len < MAX_MATCH && src < top) {
                 src++; m++; len++;
             }

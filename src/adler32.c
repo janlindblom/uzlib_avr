@@ -41,17 +41,17 @@
 #define A32_BASE 65521
 #define A32_NMAX 5552
 
-uint32_t uzlib_adler32(const void *data, unsigned int length, uint32_t prev_sum /* 1 */)
+uint32_t uzlib_adler32(const void *data, uint16_t length, uint32_t prev_sum /* 1 */)
 {
-   const unsigned char *buf = (const unsigned char *)data;
+   const char *buf = (const char *)data;
 
-   unsigned int s1 = prev_sum & 0xffff;
-   unsigned int s2 = prev_sum >> 16;
+   uint16_t s1 = prev_sum & 0xffff;
+   uint16_t s2 = prev_sum >> 16;
 
    while (length > 0)
    {
-      int k = length < A32_NMAX ? length : A32_NMAX;
-      int i;
+      int16_t k = length < A32_NMAX ? length : A32_NMAX;
+      int16_t i;
 
       for (i = k / 16; i; --i, buf += 16)
       {
