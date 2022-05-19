@@ -13,8 +13,9 @@ target  = ../lib/libtinf.a
 objects = tinflate.o tinfgzip.o tinfzlib.o adler32.o crc32.o \
     defl_static.o genlz77.o
 
+CC = avr-gcc
 COPT    = -Os
-CFLAGS  = -Wall $(COPT) -fomit-frame-pointer
+CFLAGS  = -Wall -Wshift-count-overflow $(COPT) -fomit-frame-pointer
 LDFLAGS = $(CFLAGS) -s
 
 .PHONY: all clean

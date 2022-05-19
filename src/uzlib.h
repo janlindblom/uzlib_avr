@@ -151,7 +151,7 @@ struct uzlib_comp {
     uint16_t dict_size;
 };
 
-void TINFCC uzlib_compress(struct uzlib_comp *c, const uint8_t *src, uint16_t slen);
+void TINFCC uzlib_compress(struct uzlib_comp *c, const unsigned char *src, uint16_t slen);
 
 #include "defl_static.h"
 

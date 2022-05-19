@@ -95,7 +95,7 @@ static inline void copy(void *data, uint16_t offset, uint16_t len)
 #endif
 
 
-void uzlib_compress(struct uzlib_comp *data, const uint8_t *src, uint16_t slen)
+void uzlib_compress(struct uzlib_comp *data, const unsigned char *src, uint16_t slen)
 {
     const uint8_t *top = src + slen - MIN_MATCH;
     while (src < top) {

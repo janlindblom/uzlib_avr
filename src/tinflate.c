@@ -55,16 +55,16 @@ uint32_t tinf_get_be_uint32(TINF_DATA *d);
 #ifdef RUNTIME_BITS_TABLES
 
 /* extra bits and base tables for length codes */
-char length_bits[30];
+uint8_t length_bits[30];
 uint16_t length_base[30];
 
 /* extra bits and base tables for distance codes */
-char dist_bits[30];
+uint8_t dist_bits[30];
 uint16_t dist_base[30];
 
 #else
 
-const char length_bits[30] = {
+const uint8_t length_bits[30] = {
    0, 0, 0, 0, 0, 0, 0, 0,
    1, 1, 1, 1, 2, 2, 2, 2,
    3, 3, 3, 3, 4, 4, 4, 4,
@@ -77,7 +77,7 @@ const uint16_t length_base[30] = {
    131, 163, 195, 227, 258
 };
 
-const char dist_bits[30] = {
+const uint8_t dist_bits[30] = {
    0, 0, 0, 0, 1, 1, 2, 2,
    3, 3, 4, 4, 5, 5, 6, 6,
    7, 7, 8, 8, 9, 9, 10, 10,
@@ -93,7 +93,7 @@ const uint16_t dist_base[30] = {
 #endif
 
 /* special ordering of code length codes */
-const char clcidx[] = {
+const uint8_t clcidx[] = {
    16, 17, 18, 0, 8, 7, 9, 6,
    10, 5, 11, 4, 12, 3, 13, 2,
    14, 1, 15
@@ -148,7 +148,7 @@ static void tinf_build_fixed_trees(TINF_TREE *lt, TINF_TREE *dt)
 }
 
 /* given an array of code lengths, build a tree */
-static void tinf_build_tree(TINF_TREE *t, const char *lengths, uint16_t num)
+static void tinf_build_tree(TINF_TREE *t, const unsigned char *lengths, uint16_t num)
 {
    uint16_t offs[16];
    uint16_t i, sum;
@@ -307,7 +307,7 @@ static int16_t tinf_decode_symbol(TINF_DATA *d, TINF_TREE *t)
 static int16_t tinf_decode_trees(TINF_DATA *d, TINF_TREE *lt, TINF_TREE *dt)
 {
    /* code lengths for 288 literal/len symbols and 32 dist symbols */
-   char lengths[288+32];
+   uint8_t lengths[288+32];
    uint16_t hlit, hdist, hclen, hlimit;
    uint16_t i, num, length;
 
