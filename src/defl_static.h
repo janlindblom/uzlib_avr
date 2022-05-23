@@ -1,5 +1,6 @@
 /*
  * Copyright (c) uzlib authors
+ * Copyright (c) 2022 Jan Lindblom
  *
  * This software is provided 'as-is', without any express
  * or implied warranty.  In no event will the authors be
@@ -26,12 +27,20 @@
  *    any source distribution.
  */
 
-/* This files contains type declaration and prototypes for defl_static.c.
+/* This files contains type declaration and prototypes for defl_static.S.
    They may be altered/distinct from the originals used in PuTTY source
    code. */
+
+#ifndef __ASSEMBLER__
+#pragma once
+
+#include "uzlib.h"
+#include <inttypes.h>
 
 void outbits(struct uzlib_comp *ctx, uint32_t bits, int16_t nbits);
 void zlib_start_block(struct uzlib_comp *ctx);
 void zlib_finish_block(struct uzlib_comp *ctx);
 void zlib_literal(struct uzlib_comp *ctx, char c);
 void zlib_match(struct uzlib_comp *ctx, int16_t distance, int16_t len);
+
+#endif /* ASSEMBLER */

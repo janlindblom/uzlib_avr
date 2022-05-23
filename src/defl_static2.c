@@ -54,7 +54,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * compressing a large file under no significant time constraint,
  * but when you're compressing little bits in real time, things get
  * hairier.
- * 
+ *
  * I suppose it's possible that I could compute Huffman trees based
  * on the frequencies in the _previous_ block, as a sort of
  * heuristic, but I'm not confident that the gain would balance out
@@ -113,19 +113,19 @@ static const char mirrorbytes[256] = {
 };
 
 typedef struct {
-    uint8_t extrabits;
-    uint8_t min, max;
+    char extrabits;
+    char min, max;
 } len_coderecord;
 
 typedef struct {
-    uint8_t code, extrabits;
+    char code, extrabits;
     uint16_t min, max;
 } dist_coderecord;
 
 #define TO_LCODE(x, y) x - 3, y - 3
 #define FROM_LCODE(x) (x + 3)
 
-static const len_coderecord lencodes[] = {
+static const char * lencodes[29][3] = {
     {0, TO_LCODE(3, 3)},
     {0, TO_LCODE(4, 4)},
     {0, TO_LCODE(5, 5)},
@@ -225,7 +225,7 @@ void zlib_match(struct uzlib_comp *out, int16_t distance, int16_t len)
          * We can transmit matches of lengths 3 through 258
          * inclusive. So if len exceeds 258, we must transmit in
          * several steps, with 258 or less in each step.
-         * 
+         *
          * Specifically: if len >= 261, we can transmit 258 and be
          * sure of having at least 3 left for the next step. And if
          * len <= 258, we can just transmit len. But if len == 259
@@ -243,9 +243,9 @@ void zlib_match(struct uzlib_comp *out, int16_t distance, int16_t len)
         while (1) {
             assert(j - i >= 2);
             k = (j + i) / 2;
-            if (thislen < FROM_LCODE(lencodes[k].min))
+            if (thislen < FROM_LCODE(lencodes[k][1]))
                 j = k;
-            else if (thislen > FROM_LCODE(lencodes[k].max))
+            else if (thislen > FROM_LCODE(lencodes[k][2]))
                 i = k;
             else {
                 l = &lencodes[k];

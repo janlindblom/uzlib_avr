@@ -1,0 +1,9 @@
+{
+  "files.associations": {
+    "*.h": "c",
+    "LICENSE": "plaintext",
+    "CHANGELOG": "markdown",
+    "*.inc": "avr",
+    "*.S": "avr"
+  }
+}

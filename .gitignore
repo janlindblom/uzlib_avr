@@ -4,3 +4,7 @@
 *.o
 *.map
 *.a
+*.lst
+*.ref
+*.bak
+.dep/

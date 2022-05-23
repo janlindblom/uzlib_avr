@@ -29,6 +29,7 @@
 ;;    any source distribution.
 ;;
 
+#include "library.inc"
 #include "crc32.h"
 
 .section .text
