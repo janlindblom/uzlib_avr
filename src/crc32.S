@@ -34,10 +34,10 @@
 
 .section .text
 
-; uint32_t tinf_crc32(const void *data, uint16_t length, uint32_t crc)
-.func tinf_crc32
-.global tinf_crc32
-tinf_crc32:                     ; r25:24 = 16 bit data pointer (address), r23:22 = uint16_t length, r21:18 = uint32_t crc
+; uint32_t uzlib_crc32(const void *data, uint16_t length, uint32_t crc)
+.global uzlib_crc32
+.func uzlib_crc32
+uzlib_crc32:                     ; r25:24 = 16 bit data pointer (address), r23:22 = uint16_t length, r21:18 = uint32_t crc
     _MOVW ZH, ZL, r25, r24      ; Z = pointer to data
     _MOVW XH, XL, r23, r22      ; X = length
     cpi XL, 0                   ; length == 0?

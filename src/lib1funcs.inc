@@ -219,16 +219,16 @@ __mulqihi3:
     clr r20
     sbrc r22, 7
     mov r20, r24
-    call __mulhi3
+    _XCALL __mulhi3
 #else /* have no CALL */
     ;; Skip sign-extension of A if A >= 0
     ;; Same size as with the first alternative but avoids errata skip
     ;; and is faster if A >= 0
     sbrs r22, 7
-    rjmp __mulhi3
+    _XJMP __mulhi3
     ;; If  A < 0  store B
     mov r20, r24
-    rcall __mulhi3
+    _XCALL __mulhi3
 #endif /* HAVE_JMP_CALL */
     ;; 1-extend A after the multiplication
     sub r25, r20
@@ -238,6 +238,7 @@ __mulqihi3:
 ;;; R25:R24 = R23:R22 * R25:R24
 ;;; (r25:r24) = (r23:r22) * (r25:r24)
 ;;; Clobbers: r0, R21..R23
+.global __mulhi3
 .func __mulhi3
 __mulhi3:
     ;; Clear result
