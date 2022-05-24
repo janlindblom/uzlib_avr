@@ -15,8 +15,8 @@ TARGET  = ../lib/libtinf
 MCU     = atmega32u4
 FORMAT  = ihex
 
-SRC             = tinflate.c tinfgzip.c adler32.c
-ASRC            = crc32.S defl_static.S tinfzlib.S genlz77.S
+SRC             = tinflate.c tinfgzip.c
+ASRC            = crc32.S defl_static.S tinfzlib.S genlz77.S adler32.S
 OPT             = s
 DEBUG           = dwarf-2
 EXTRAINCDIRS    =
@@ -36,7 +36,7 @@ CFLAGS += $(CDEFS) $(CINCS)
 CFLAGS += -O$(OPT)
 CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
 CFLAGS += -Wall -Wstrict-prototypes
-CFLAGS += -Wa,-adhlns=$(<:.c=.lst)
+#CFLAGS += -Wa,-adhlns=$(<:.c=.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
 
@@ -47,7 +47,7 @@ CFLAGS += $(CSTANDARD)
 #             for use in COFF files, additional information about filenames
 #             and function names needs to be present in the assembler source
 #             files -- see avr-libc docs [FIXME: not yet described there]
-ASFLAGS = -Wa,-adhlns=$(<:.S=.lst),-gstabs
+ASFLAGS = #-Wa,-adhlns=$(<:.S=.lst),-gstabs
 
 EXTMEMOPTS =
 

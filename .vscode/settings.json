@@ -1,9 +1,16 @@
 {
   "files.associations": {
+    "Cakefile": "coffeescript",
+    "*.cps": "javascript",
+    "*.fdm_material": "xml",
     "*.h": "c",
     "LICENSE": "plaintext",
     "CHANGELOG": "markdown",
+    "*.nas": "nasm",
     "*.inc": "avr",
-    "*.S": "avr"
+    "*.S": "avr",
+    "*.asm": "nasm",
+    "cstdlib": "c",
+    "*.bak": "c"
   }
 }

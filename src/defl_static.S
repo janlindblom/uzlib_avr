@@ -33,6 +33,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include "library.inc"
+#include "lib1funcs.inc"
 #include "defl_static.h"
 
 .section .text
@@ -51,6 +52,15 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ; having to transmit the trees.
 ;
 
+.func abort
+abort:
+    ldi r24, lo8(-1)
+    clr r25
+    pop YH
+    pop YL
+    ret
+.endfunc
+
 ; void outbits(struct uzlib_comp *out, uint32_t bits, int16_t nbits)
 .global outbits
 .func outbits
@@ -60,12 +70,9 @@ outbits:
 ; r25:r24 <- struct uzlib_comp *out
 ; r23:r20 <- uint32_t bits
 ; r19:r18 <- int16_t nbits
-    mov YL, r24                 ; Y <- pointer to struct uzlib_comp *out
-    mov YH, r25
-    mov r24, r20                ; XH:r24 <- uint32_t bits
-    mov r25, r21
-    mov XL, r22
-    mov XH, r23
+    _MOVW YH, YL, r25, r24      ; Y <- pointer to struct uzlib_comp *out
+    _MOVW r25, r24, r21, r20    ; XH:r24 <- uint32_t bits
+    _MOVW XH, XL, r23, r22
     ldd r20, Y+10               ; r21:r20 <- out->noutbits
     ldd r21, Y+11
     add r18, r20                ; r19:r18 <- out->noutbits + nbits
@@ -73,7 +80,7 @@ outbits:
     cpi r18, 0x21               ; assert r19:r18 <= 32
     cpc r19, r1
     brlt while_noutbits
-    rcall abort                 ; call remote abort function from stdlib.h
+    _XCALL abort
 while_noutbits:
     std Y+11, r19               ; out->noutbits += nbits
     std Y+10, r18
@@ -101,7 +108,7 @@ while_noutbits:
     cpi r18, 8                  ; while (out->noutbits >= 8)
     cpc r19, r1
     brge start_loop
-    pop YH                     ; Restore Y
+    pop YH                      ; Restore Y
     pop YL
     ret                         ; Return
 start_loop:
@@ -118,7 +125,7 @@ start_loop:
     std Y+4, r22
     ld r24, Y                   ; r25:r24 <- out->outbuf
     ldd r25, Y+1                ; r23:r22 <- out->outsize
-    rcall realloc               ; call remote realloc from stdlib.h
+    _XCALL realloc              ; call remote realloc from stdlib.h
     std Y+1, r25                ; out->outbuf <- realloc(out->outbuf, out->outsize)
     st Y, r24
 no_realloc:
@@ -161,8 +168,7 @@ no_realloc:
 .func zlib_literal
 zlib_literal:
     mov ZL, r22                 ; Z <- r22 <- char c
-    mov XH, r25                ; r25:r24 <- struct uzlib_comp *out
-    mov XL, r24
+    _MOVW XH, XL, r25, r24      ; r25:r24 <- struct uzlib_comp *out
     adiw XL, 12
     ld r18, X+                  ; r19:r18 <- out->comp_disabled
     ld r19, X
@@ -222,22 +228,18 @@ zlib_match:
     push YL
     push YH
 
-    mov r16, r20                ; r17:r16 <- int16_t len
-    mov r17, r21
-    mov r10, r22                ; r11:r10 <- int16_t distance
-    mov r11, r23
-    mov r12, r24                ; r13:r12 <- struct uzlib_comp *out
-    mov r13, r25
+    _MOVW r17, r16, r21, r20    ; r17:r16 <- int16_t len
+    _MOVW r11, r10, r23, r22    ; r11:r10 <- int16_t distance
+    _MOVW r13, r12, r25, r24    ; r13:r12 <- struct uzlib_comp *out
 
-    mov ZH, r25
-    mov ZL, r24
+    _MOVW ZH, ZL, r25, r24
     ldd r24, Z+12               ; r25:r24 <- out->comp_disabled
     ldd r25, Z+13
     or r24, r25                 ; OR bytes in out->comp_disabled
     brne call_abort
     rjmp exit_function
 call_abort:
-    rcall abort                 ; out->comp_disabled is set
+    _XCALL abort                ; out->comp_disabled is set
 main_loop:
 ; We can transmit matches of lengths 3 through 258
 ; inclusive. So if len exceeds 258, we must transmit in
@@ -289,17 +291,15 @@ while_forever:
 2:
     asr r15                     ; r15:r14 <- k = (j + i) / 2
     ror r14
-    mov r25, r15                ; r25:r24 <- k
-    mov r24, r14
     ldi r22, 0x03               ; r23:r22 <- 0x03
     ldi r23, 0
-    rcall __mulhi3              ; call 16-bit multiplication from stdlib
-    mov r18, r24                ; r19:r18 <- result of k * 3 (for later)
-    mov r19, r25
+    _MOVW r25, r24, r15, r14    ; r25:r24 <- k
+    ;_XCALL __mulhi3             ; call 16-bit multiplication from stdlib
+    _MULS r25, r24, r23, r22
+    _MOVW r19, r18, r25, r24    ; r19:r18 <- result of k * 3 (for later)
     subi r24, lo8(-(lencodes))  ; r25:r24 <- l = &lencodes[k]
     sbci r25, hi8(-(lencodes))
-    mov ZH, r25                 ; Z <- lencodes[k]
-    mov ZL, r24
+    _MOVW ZH, ZL, r25, r24      ; Z <- lencodes[k]
     ldd r20, Z+1                ; r20 <- lencodes[k].min
     mov r8, r20                 ; r9:r8 <- &lencodes[k].min
     mov r9, r1
@@ -309,8 +309,8 @@ while_forever:
     cp r20, YL                  ; Check if thislen < (lencodes[k].min + 3)
     cpc r21, YH
     brlt 3f                     ; No, thislen >= (lencodes[k].min + 3)
-    mov r7, r15                 ; Yes, thislen < (lencodes[k].min + 3)
-    mov r6, r14                 ; r7:r6 <- j = k
+    ; Yes, thislen < (lencodes[k].min + 3)
+    _MOVW r7, r6, r15, r14      ; r7:r6 <- j = k
     rjmp while_forever
 3:  ldd r24, Z+2                ; r25:r24 <- lencodes[k].max
     ldi r25, 0
@@ -318,16 +318,15 @@ while_forever:
     cp r24, YL                  ; Check if thislen > (lencodes[k].max + 3)
     cpc r25, YH
     brge 4f                     ; No, thislen <= (lencodes[k].max + 3)
-    mov XH, r15                 ; Yes thislen > (lencodes[k].max + 3)
-    mov XL, r14                 ; X <- i = k
+    ; Yes thislen > (lencodes[k].max + 3)
+    _MOVW XH, XL, r15, r14      ; X <- i = k
     rjmp while_forever
-4:  mov r25, r19                ; r25:r24 <- k * 3 from before
-    mov r24, r18
+4:  _MOVW r25, r24, r19, r18    ; r25:r24 <- k * 3 from before
     ldi r22, lo8(-85)
     ldi r23, lo8(-86)
-    rcall __mulhi3              ; call 16-bit multiplication from stdlib
-    mov r20, r24                ; r21:r20 <- lcode = l - lencodes + 257
-    mov r21, r25
+    ;_XCALL __mulhi3             ; call 16-bit multiplication from stdlib
+    _MULS r25, r24, r23, r22
+    _MOVW r21, r20, r25, r24     ; r21:r20 <- lcode = l - lencodes + 257
 ; Transmit the length code. 256-279 are seven bits
 ; starting at 0000000; 280-287 are eight bits starting at
 ; 11000000.
@@ -338,8 +337,7 @@ while_forever:
     clr r19
     subi r20, lo8(-(mirrorbytes+169))
     sbci r21, hi8(-(mirrorbytes+169))
-    mov ZH, r21                 ; mirrorbytes[0xc0 - 280 + lcode]
-    mov ZL, r20
+    _MOVW ZH, ZL, r21, r20      ; mirrorbytes[0xc0 - 280 + lcode]
     ld r20, Z
     clr r21
     clr r22
@@ -349,8 +347,7 @@ while_forever:
     clr r19
     lsl r20
     rol r21
-    mov ZH, r21
-    mov ZL, r20                 ; mirrorbytes[(lcode - 256) * 2]
+    _MOVW ZH, ZL, r21, r20      ; mirrorbytes[(lcode - 256) * 2]
     subi ZL, lo8(-(mirrorbytes+2))
     sbci ZH, hi8(-(mirrorbytes+2))
     ld r20, Z
@@ -358,17 +355,15 @@ while_forever:
     clr r22
     clr r23
 transmit_lcode:
-    mov r24, r12
-    mov r25, r13
-    rcall outbits
+    _MOVW r25, r24, r13, r12    ; mirrorbytes[(lcode - 256) * 2]
+    _XCALL outbits
 ; Transmit the extra bits.
     ldi r22, 0x03               ; r23:r22 <- 0x03
     clr r23
-    mov r24, r14                ; r25:r24 <- k
-    mov r25, r15
-    rcall __mulhi3              ; call 16-bit multiplication from stdlib
-    mov ZH, r25
-    mov ZL, r24
+    _MOVW r25, r24, r15, r14    ; r25:r24 <- k
+    ;_XCALL __mulhi3             ; call 16-bit multiplication from stdlib
+    _MULS r25, r24, r23, r22
+    _MOVW ZH, ZL, r25, r24
     subi ZL, lo8(-(lencodes))
     sbci ZH, hi8(-(lencodes))
     ld r18, Z
@@ -378,32 +373,28 @@ transmit_lcode:
     ldi ZH, 0x03
     add r8, ZH                  ; r9:r8 <- lencodes[k].min + 3
     adc r9, r1
-    mov r20, YL                 ; r21:r20 <- thislen
-    mov r21, YH
+    _MOVW r21, r20, YH, YL      ; r21:r20 <- thislen
     sub r20, r8                 ; r21:r20 <- thislen - (lencodes[k].min + 3)
     sbc r21, r9
     mov r0, r21
     lsl r0
     sbc r22, r22
     sbc r23, r23
-    mov r24, r12
-    mov r25, r13
-    rcall outbits
+    _MOVW r25, r24, r13, r12
+    _XCALL outbits
 6:                              ; l->extrabits is not true
     ldi r18, 0x1e               ; r19:r18 <- j = sizeof(distcodes) / sizeof(*distcodes)
     clr r19
     ldi XL, lo8(-1)             ; X <- i = -1
     ldi XH, lo8(-1)
 find_distcode_extrabits:
-    mov r24, r18                ; r25:r24 <- j = sizeof(distcodes) / sizeof(*distcodes)
-    mov r25, r19
+    _MOVW r25, r24, r19, r18    ; r25:r24 <- j = sizeof(distcodes) / sizeof(*distcodes)
     sub r24, XL                 ; r25:r24 += 1
     sbc r25, XH
     sbiw r24, 2                 ; r25:r24 -= 2
     brge 7f                     ; Check if j - i >= 2
     rjmp call_abort             ; Call abort if not
-7:  mov YH, XH                  ; Y <- i
-    mov YL, XL
+7:  _MOVW YH, YL, XH, XL        ; Y <- i
     add YL, r18                 ; Y += j
     adc YH, r19
     sbrc YH, 7
@@ -412,11 +403,10 @@ find_distcode_extrabits:
     ror YL
     ldi r22, 0x06               ; Check if distance < distcodes[k].min
     clr r23
-    mov r24, YL
-    mov r25, YH
-    rcall __mulhi3              ; call 16-bit multiplication from stdlib
-    mov ZH, r25
-    mov ZL, r24
+    _MOVW r25, r24, YH, YL
+    ;_XCALL __mulhi3              ; call 16-bit multiplication from stdlib
+    _MULS r25, r24, r23, r22
+    _MOVW ZH, ZL, r25, r24
     subi ZL, lo8(-(distcodes))
     sbci ZH, hi8(-(distcodes))
     ldd r14, Z+2                ; d = &distcodes[k];
@@ -424,8 +414,7 @@ find_distcode_extrabits:
     cp r10, r14
     cpc r11, r15
     brsh 8f                     ; Match found?
-    mov r19, YH
-    mov r18, YL
+    _MOVW r19, r18, YH, YL
     rjmp find_distcode_extrabits
 8:
     ldd r24, Z+4
@@ -433,8 +422,7 @@ find_distcode_extrabits:
     cp r24, r10
     cpc r25, r11
     brsh 9f                     ; Match found!
-    mov XH, YH
-    mov XL, YL
+    _MOVW XH, XL, YH, YL
     rjmp find_distcode_extrabits
 ; Transmit the distance code. Five bits starting at 00000.
 9:  ld ZL, Z
@@ -453,31 +441,27 @@ find_distcode_extrabits:
     clr r21
     clr r22
     clr r23
-    mov r24, r12                ; r25:r24 <- out
-    mov r25, r13
-    rcall outbits
+    _MOVW r25, r24, r13, r12    ; r25:r24 <- out
+    _XCALL outbits
     ldi r22, 0x06               ; Check if d->extrabits
     clr r23
-    mov r24, YL
-    mov r25, YH
-    rcall __mulhi3              ; call 16-bit multiplication from stdlib
-    mov ZH, r25
-    mov ZL, r24
+    _MOVW r25, r24, YH, YL
+    ;_XCALL __mulhi3              ; call 16-bit multiplication from stdlib
+    _MULS r25, r24, r23, r22
+    _MOVW ZH, ZL, r25, r24
     subi ZL, lo8(-(distcodes))
     sbci ZH, hi8(-(distcodes))
     ldd r18, Z+1                ; r19:r18 <- d->extrabits
     tst r18
     breq exit_function
     clr r19
-    mov r21, r11
-    mov r20, r10
+    _MOVW r21, r20, r11, r10
     sub r20, r14                ; distance - d->min
     sbc r21, r15
     clr r22
     clr r23
-    mov r24, r12                ; r25:r24 <- out
-    mov r25, r13
-    rcall outbits
+    _MOVW r25, r24, r13, r12    ; r25:r24 <- out
+    _XCALL outbits
 exit_function:
     cp r1, r16
     cpc r1, r17
@@ -515,7 +499,7 @@ zlib_start_block:
     clr r21
     clr r22
     clr r23
-    rcall outbits
+    _XCALL outbits
     ldi r18, 0x02               ; r19:r18 <- 0x02
     clr r19
     ldi r20, 0x01               ; r23:r20 <- 0x01
@@ -544,7 +528,7 @@ zlib_finish_block:
     clr r22
     clr r23
     ; r25:r24 <- struct uzlib_comp *out
-    rcall outbits               ; call outbits
+    _XCALL outbits               ; call outbits
     ldi r18, 0x07               ; r19:r18 <- 0x07
     clr r19
     clr r20                     ; r23:r20 <- 0x00

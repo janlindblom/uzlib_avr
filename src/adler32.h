@@ -1,7 +1,9 @@
 /*
- * genlz77  -  Generic LZ77 compressor, definitions.
+ * Adler-32 checksum, definitions
  *
  * Copyright (c) 2022 Jan Lindblom
+ *
+ * http://www.ibsensoftware.com/
  *
  * This software is provided 'as-is', without any express
  * or implied warranty.  In no event will the authors be
@@ -28,10 +30,18 @@
  *    any source distribution.
  */
 
+/*
+ * Adler-32 algorithm taken from the zlib source, which is
+ * Copyright (C) 1995-1998 Jean-loup Gailly and Mark Adler
+ */
+
 #ifndef __ASSEMBLER__
 #pragma once
-#include <stdint.h>
-#include "uzlib.h"
 
-static inline int16_t HASH(struct uzlib_comp *data, const uint8_t *p);
-#endif /* ASSEMBLER */
+#include "tinf.h"
+
+#define A32_BASE 65521
+#define A32_NMAX 5552
+
+uint32_t uzlib_adler32(const void *data, uint16_t length, uint32_t prev_sum /* 1 */);
+#endif

@@ -29,6 +29,7 @@
  *    any source distribution.
  */
 
+#include "library.inc"
 #include "genlz77.h"
 
 ; This is hash function from liblzf
@@ -36,21 +37,21 @@
 .global HASH
 .func HASH
 HASH:
-    mov ZL, r24                 ; pointer to data
-    mov ZH, r25
-    mov XL, r22                 ; pointer to p
-    mov XH, r23
+    push r21
+    push r20
+    push r19
+    push r18
+    _MOVW ZH, ZL, r25, r24      ; pointer to data
+    _MOVW XH, XL, r23, r22      ; pointer to p
 ;; PART ONE: (p[0] << 16) | (p[1] << 8) | p[2]
 ; first component: p[0] << 16
     ld r24, X+                  ; load p[0] into r25:r24 and increment Z
     clr r25
     ldi r22, 0x10               ; initialise counter
     rjmp 2f                     ; p[0] << 16
-1:
-    lsl r24
+1:  lsl r24
     rol r25
-2:
-    dec r22
+2:  dec r22
     brpl 1b                     ; Keep shifting if r22 > 0
     ; r25:r24 <- p[0] << 16
 ; second component: p[1] << 8
@@ -72,26 +73,22 @@ HASH:
     clr r19
     sub r18, r20                ; (24 - HASH_BITS)
     sbc r19, r21
-    mov r20, r24
-    mov r21, r25
+    _MOVW r21, r20, r25, r24
     ; r21:r20 <- ((p[0] << 16) | (p[1] << 8) | p[2])
     ; r19:r18 <- (24 - HASH_BITS)
 ;; PART THREE: Calculate (PART ONE) >> (PART TWO)
     mov r0, r18                 ; r0 <- (24 - HASH_BITS)
     rjmp 2f                     ; ((p[0] << 16) | (p[1] << 8) | p[2]) >> (24 - HASH_BITS)
-1:
-    asr r25                     ; r25:r24 has ((p[0] << 16) | (p[1] << 8) | p[2])
+1:  asr r25                     ; r25:r24 has ((p[0] << 16) | (p[1] << 8) | p[2])
     ror r24
-2:
-    dec r0
+2:  dec r0
     brpl 1b                     ; Keep shifting if r0 > 0
     ; r25:r24 <- ((p[0] << 16) | (p[1] << 8) | p[2]) >> (24 - HASH_BITS)
 ;; PART FOUR: Calculate (PART THREE) - (PART ONE)
     sub r24, r20                ; (PART THREE) - (PART ONE)
     sbc r25, r21
     ; r25:r24 <- (((p[0] << 16) | (p[1] << 8) | p[2]) >> (24 - HASH_BITS)) - ((p[0] << 16) | (p[1] << 8) | p[2])
-    mov r18, r24
-    mov r19, r25
+    _MOVW r19, r18, r25, r24
     ; r19:r18 <- (((p[0] << 16) | (p[1] << 8) | p[2]) >> (24 - HASH_BITS)) - ((p[0] << 16) | (p[1] << 8) | p[2])
 ;; PART FIVE: Calculate ((1<<HASH_BITS) - 1)
     ldd r20, Z+16               ; Load HASH_BITS into r25:r24
@@ -99,11 +96,9 @@ HASH:
     ldi r24, 0x01               ; r21:r20 <- 1
     clr r25
     rjmp 2f                     ; Start shifting
-1:
-    lsl r24
+1:  lsl r24
     rol r25
-2:
-    dec r20                     ; decrement counter
+2:  dec r20                     ; decrement counter
     brpl 1b                     ; Keep shifting if r18 > 0
     ; r21:r20 <- (1<<HASH_BITS)
     sbiw r24, 1
@@ -112,5 +107,9 @@ HASH:
     and r24, r18
     and r25, r19
 ;; Done, result is in r25:r24.
+    pop r18
+    pop r19
+    pop r20
+    pop r21
     ret
 .endfunc

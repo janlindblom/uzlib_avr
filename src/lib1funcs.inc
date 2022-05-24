@@ -24,80 +24,37 @@ a copy of the GCC Runtime Library Exception along with this program;
 see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 <http://www.gnu.org/licenses/>.  */
 
+; r25:r24 <- r1_arg1:r1_arg2 * r2_arg1:r2_arg2
+.macro _MULS r1_arg1, r1_arg2, r2_arg1, r2_arg2
+#if defined (__AVR_HAVE_MUL__)
+    ;;; R25:R22 = (signed long) R27:R26 * (signed long) R19:R18
+    push r27
+    push r26
+    push r19
+    push r18
+    _MOVW r27, r26, \r1_arg1, \r1_arg2
+    _MOVW r19, r18, \r2_arg1, \r2_arg2
+    _XCALL __mulhisi3
+    _MOVW r25, r24, r23, r22
+    pop r18
+    pop r19
+    pop r26
+    pop r27
+#else
+    ;;; R25:R24 = R23:R22 * R25:R24
+    push r23
+    push r22
+    _MOVW r25, r24, \r1_arg1, \r1_arg2
+    _MOVW r23, r22, \r2_arg1, \r2_arg2
+    _XCALL __mulhi3
+    pop r22
+    pop r23
+#endif
+.endm
+
 ;; pseudo op-code DIV Rd, Rr: R1:R0 <-- Rd / Rr
 .macro div r_arg1, r_arg2
     _DIV \r_arg1, \r_arg2
-.endm
-
-#if !defined (__AVR_HAVE_MUL__)
-;; pseudo op-code MUL Rd, Rr: R1:R0 <-- Rd * Rr
-.macro mul r_arg1, r_arg2
-    _MULW \r_arg1, \r_arg2
-.endm
-
-.macro mulw r_arg1, r_arg2
-    _MULWW \r_arg1, \r_arg2
-.endm
-
-;; pseudo op-code MULS Rd, Rr: R1:R0 <-- Rd * Rr
-.macro muls r_arg1, r_arg2
-    _MULS \r_arg1, \r_arg2
-.endm
-#endif
-
-#if defined (__AVR_HAVE_SPH__)
-#define __SP_H__ 0x3e
-#endif
-#define __SP_L__ 0x3d
-
-#if defined (__AVR_TINY__)
-#define __zero_reg__ r17
-#define __tmp_reg__ r16
-#else
-#define __zero_reg__ 1
-#define __tmp_reg__ 0
-#endif
-
-
-.macro _MOVW dh, dl, sh, sl
-#if !defined (__AVR_HAVE_MOVW__)
-    mov \dl, \sl
-    mov \dh, \sh
-#else
-    movw \dl, \sl
-#endif
-.endm
-
-#if defined (__AVR_HAVE_JMP_CALL__)
-#define _XCALL call
-#define _XJMP  jmp
-#else
-#define _XCALL rcall
-#define _XJMP  rjmp
-#endif
-
-.macro _WSUBI r_arg1, i_arg2
-#if defined (__AVR_TINY__)
-    subi \r_arg1,   lo8(\i_arg2)
-    sbci \r_arg1+1, hi8(\i_arg2)
-#else
-    sbiw \r_arg1, \i_arg2
-#endif
-.endm
-
-.macro _MULS r_arg1, r_arg2
-#if defined (__AVR_HAVE_MUL__)
-    mul \r_arg1, \r_arg2
-#else
-    push r22
-    push r24
-    mov r22, \r_arg1
-    mov r24, \r_arg2
-    _XCALL umulqihi3
-    _MOVW r1, r0, r25, r24
-    pop r24
-    pop r22
-#endif
 .endm
 
 .macro _MULW r_arg1, r_arg2
@@ -137,6 +94,19 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
     pop r24
     pop r22
 .endm
+
+#if defined (__AVR_HAVE_SPH__)
+#define __SP_H__ 0x3e
+#endif
+#define __SP_L__ 0x3d
+
+#if defined (__AVR_TINY__)
+#define __zero_reg__ r17
+#define __tmp_reg__ r16
+#else
+#define __zero_reg__ 1
+#define __tmp_reg__ 0
+#endif
 
 .macro do_prologue_saves n_pushed n_frame=0
     ldi r26, lo8(\n_frame)
