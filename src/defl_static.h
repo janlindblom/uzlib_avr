@@ -43,4 +43,4 @@ void zlib_finish_block(struct uzlib_comp *ctx);
 void zlib_literal(struct uzlib_comp *ctx, char c);
 void zlib_match(struct uzlib_comp *ctx, int16_t distance, int16_t len);
 
-#endif /* ASSEMBLER */
+#endif /* !ASSEMBLER */

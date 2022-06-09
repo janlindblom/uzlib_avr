@@ -32,11 +32,26 @@
 #define _XJMP  rjmp
 #endif
 
-.macro _WSUBI r_arg1, i_arg2
+.macro _SBIW r_arg1, i_arg2
 #if defined (__AVR_TINY__)
     subi \r_arg1,   lo8(\i_arg2)
     sbci \r_arg1+1, hi8(\i_arg2)
 #else
     sbiw \r_arg1, \i_arg2
+#endif
+.endm
+
+.macro _ADIW r_arg1, i_arg2
+#if defined (__AVR_TINY__)
+    push r24
+    push r25
+    ldi r24, lo8(\i_arg2)
+    ldi r25, hi8(\i_arg2)
+    add \r_arg1, r24
+    adc \r_arg1+1, r25
+    pop r25
+    pop r24
+#else
+    adiw \r_arg1, \i_arg2
 #endif
 .endm
